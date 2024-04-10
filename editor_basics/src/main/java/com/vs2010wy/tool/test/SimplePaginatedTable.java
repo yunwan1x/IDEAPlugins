@@ -1,5 +1,4 @@
 package com.vs2010wy.tool.test;
-import com.example.demo.PlaceholderTextField;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -11,7 +10,7 @@ public class SimplePaginatedTable {
 
     private JFrame frame;
     private JTable table;
-    private DefaultTableModel model;
+    private DefaultTableModel model  = new DefaultTableModel();;
     private PlaceholderTextField searchField;
     private JButton previousButton;
     private JButton nextButton;
@@ -22,11 +21,16 @@ public class SimplePaginatedTable {
 
     private int totalCount;
     private int rowCountPerPage = 10; // Default rows per page
-    private Vector<Vector<Object>> originalTableData; // Used to store original data
+    private Vector<Vector<Object>> originalTableData = new Vector<>();
 
-    public SimplePaginatedTable() {
-        originalTableData = new Vector<>();
 
+
+    private Vector<Vector<Object>> searchTableData = new Vector<>();// Used to store original data
+
+    public void init(){
+        for (int i = 0; i < 5; i++) { // Create 5 columns for example
+            model.addColumn("Column " + (i + 1));
+        }
         for (int i = 0; i < 100; i++) {
             Vector<Object> row = new Vector<>();
             for (int j = 0; j < 5; j++) {
@@ -34,24 +38,28 @@ public class SimplePaginatedTable {
             }
             originalTableData.add(row);
         }
+    }
+
+    public SimplePaginatedTable() {
+        init();
+
+
         // Initialize the frame
         frame = new JFrame("Paginated JTable Example");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
         // Initialize table model and table
-        model = new DefaultTableModel();
+
         table = new JTable(model);
-        for (int i = 0; i < 5; i++) { // Create 5 columns for example
-            model.addColumn("Column " + (i + 1));
-        }
+
 
         // Initialize with 100 rows of sample data
 
         nextButton = new JButton("next");
         // Initialize search field
         searchField  = new PlaceholderTextField("");
-        searchField.setPlaceholder("press enter to search");
+        searchField.setPlaceholder("serch every column");
         searchField.addActionListener(this::searchAction);
         searchField.setPreferredSize(new Dimension(200 ,nextButton.getPreferredSize().height));
         // Initialize pagination buttons, label, and page size combo box
@@ -93,12 +101,7 @@ public class SimplePaginatedTable {
     private void pageSizeChanged(ActionEvent e) {
         rowCountPerPage = (int) pageSizeComboBox.getSelectedItem();
         totalPage = (int) Math.ceil(originalTableData.size() / (double) rowCountPerPage);
-        updateTableData(1); // Reset to the first page
-
-        rowCountPerPage = (int) pageSizeComboBox.getSelectedItem();
-        totalPage = (int) Math.ceil(originalTableData.size() / (double) rowCountPerPage);
-        currentPage = 1; // Reset to the first page when page size is changed
-        updateTableData(currentPage); // Update table to the first page
+        updateTableData(1);
     }
 
     private void searchAction(ActionEvent e) {
@@ -138,19 +141,22 @@ public class SimplePaginatedTable {
             start = Math.max(0, (page - 1) * rowCountPerPage);
             end = Math.min(page * rowCountPerPage, filteredData.size());
             pageData = new Vector<>(filteredData.subList(start, end));
+            totalCount= filteredData.size();
+            searchTableData = filteredData;
         } else {
             // No search text, use original data
             pageData = new Vector<>(originalTableData.subList(start, end));
+            totalCount = originalTableData.size();
         }
 
         model.setRowCount(0); // Clear the table
         pageData.forEach(model::addRow); // Add rows to the table
-        totalCount = pageData.size();
         updatePageLabel();
     }
 
     private void updatePageLabel() {
-        pageLabel.setText( currentPage + "/" + totalPage + "/" + totalCount);
+        pageLabel.setText( String.format("共 %d 页,第 %d 页,共 %d 条",totalPage,currentPage,totalCount) );
+
     }
 
     private void previousAction(ActionEvent e) {
