@@ -1,9 +1,12 @@
 package com.vs2010wy.tool.test;
 
+import com.example.demo.PlaceholderTextField;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Vector;
 
 public class SimplePaginatedTable {
@@ -12,6 +15,9 @@ public class SimplePaginatedTable {
     private JTable table;
     private DefaultTableModel model  = new DefaultTableModel();;
     private PlaceholderTextField searchField;
+    private JButton addButton;
+
+    private JButton deleteButton =  new JButton("delete");
     private JButton previousButton;
     private JButton nextButton;
     private JLabel pageLabel;
@@ -55,12 +61,36 @@ public class SimplePaginatedTable {
 
 
         // Initialize with 100 rows of sample data
-
+        addButton =  new JButton("add");
         nextButton = new JButton("next");
         // Initialize search field
         searchField  = new PlaceholderTextField("");
         searchField.setPlaceholder("serch every column");
         searchField.addActionListener(this::searchAction);
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Vector<Object> row = new Vector<>();
+                for (int j = 0; j < 5; j++) {
+                    row.add("Data"+j);
+                }
+                int selected = table.getSelectedRow();
+                updateTableData(Math.max(currentPage,totalPage));
+            }
+        });
+        addButton.addActionListener(new ActionListener() {
+            //新增或者update
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Vector<Object> row = new Vector<>();
+                for (int j = 0; j < 5; j++) {
+                    row.add("Data"+j);
+                }
+                originalTableData.insertElementAt(row,0);
+                updateTableData(currentPage);
+            }
+        });
+
         searchField.setPreferredSize(new Dimension(200 ,nextButton.getPreferredSize().height));
         // Initialize pagination buttons, label, and page size combo box
         pageSizeComboBox = new JComboBox<>(new Integer[]{ 10, 20, 50,100});
@@ -81,6 +111,8 @@ public class SimplePaginatedTable {
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new FlowLayout());
+        bottomPanel.add(addButton);
+        bottomPanel.add(deleteButton);
         bottomPanel.add(previousButton);
         bottomPanel.add(nextButton);
         bottomPanel.add(pageLabel);
@@ -99,8 +131,6 @@ public class SimplePaginatedTable {
 
 
     private void pageSizeChanged(ActionEvent e) {
-        rowCountPerPage = (int) pageSizeComboBox.getSelectedItem();
-        totalPage = (int) Math.ceil(originalTableData.size() / (double) rowCountPerPage);
         updateTableData(1);
     }
 
@@ -108,18 +138,10 @@ public class SimplePaginatedTable {
         updateTableData(1);
     }
 
-    private void updateTableWithFilteredData(Vector<Vector<Object>> filteredData) {
 
-        model.setRowCount(0); // Clear the table
-        filteredData.forEach(model::addRow); // Add search result rows to the table
-        totalCount  = filteredData.size();
-        // Update total pages and current page
-        totalPage = (int) Math.ceil((double) filteredData.size() / rowCountPerPage);
-        currentPage = 1; // Reset to the first page
-        updatePageLabel();
-    }
 
     private void updateTableData(int page) {
+        rowCountPerPage = (int) pageSizeComboBox.getSelectedItem();
         int start = (page - 1) * rowCountPerPage;
         int end = Math.min(page * rowCountPerPage, originalTableData.size());
 
@@ -146,6 +168,7 @@ public class SimplePaginatedTable {
         } else {
             // No search text, use original data
             pageData = new Vector<>(originalTableData.subList(start, end));
+            totalPage = (int) Math.ceil((double) originalTableData.size() / rowCountPerPage);
             totalCount = originalTableData.size();
         }
 
