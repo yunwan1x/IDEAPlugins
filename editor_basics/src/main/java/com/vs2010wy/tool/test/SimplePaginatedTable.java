@@ -151,7 +151,9 @@ public class SimplePaginatedTable {
         bottomPanel.add(searchField);
 
         frame.add(bottomPanel, BorderLayout.NORTH);
-
+        JLabel statusBar  =  new JLabel("xxxx");
+        statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
+        frame.add(statusBar,BorderLayout.SOUTH);
         // Set the size of the frame and make it visible
         frame.setSize(800, 400);
         updateTableData(1);
