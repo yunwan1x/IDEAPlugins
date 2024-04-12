@@ -45,7 +45,7 @@ public final class ProductUtil {
     public static void notifyError(Project project, String content) {
         NotificationGroupManager.getInstance()
                 .getNotificationGroup("comment")
-                .createNotification(content, NotificationType.ERROR)
+                .createNotification(content, NotificationType.INFORMATION)
                 .notify(project);
     }
 }

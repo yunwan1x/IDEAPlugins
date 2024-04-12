@@ -55,8 +55,8 @@ public class PlaceholderTextField extends JTextField {
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
         g.setColor(getDisabledTextColor());
-        g.drawString(placeholder, getInsets().left, pG.getFontMetrics()
-                .getMaxAscent() + getInsets().top);
+        g.drawString(placeholder, getInsets().left+3, pG.getFontMetrics()
+                .getMaxAscent() + getInsets().top+3);
     }
 
     public void setPlaceholder(final String s) {

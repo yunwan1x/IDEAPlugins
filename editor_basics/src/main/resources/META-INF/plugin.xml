@@ -34,16 +34,17 @@
   <vendor url="https://plugins.jetbrains.com">IntelliJ Platform SDK</vendor>
 
   <actions>
-    <action id="com.vs2010wy.tool.comment" class="com.vs2010wy.tool.action.CommentAction" text="comment" icon="SdkIcons.Sdk_default_icon">
+    <action id="com.vs2010wy.tool.comment" class="com.vs2010wy.tool.action.CommentAction" text="add code reiew" icon="SdkIcons.Sdk_default_icon">
       <add-to-group group-id="EditorPopupMenu" anchor="first"/>
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl M"/>
     </action>
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
-    <toolWindow id="CodeReview" icon="SdkIcons.Sdk_default_icon" factoryClass="com.vs2010wy.tool.CommentWindow"   anchor="bottom"/>
+    <toolWindow id="CodeReview" icon="SdkIcons.Sdk_default_icon" factoryClass="com.vs2010wy.tool.test.CodeReivewWindow"   anchor="bottom"/>
     <notificationGroup id="comment" displayType="BALLOON"/>
-    <typedHandler implementation="com.vs2010wy.tool.MyTypedHandler"/>
+    <editor.linePainter implementation="com.vs2010wy.tool.ui.CommentPainter"/>
+
   </extensions>
 
 </idea-plugin>

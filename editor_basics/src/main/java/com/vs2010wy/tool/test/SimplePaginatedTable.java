@@ -1,19 +1,30 @@
 package com.vs2010wy.tool.test;
 
-import com.example.demo.PlaceholderTextField;
 
 import javax.swing.*;
+import javax.swing.event.RowSorterEvent;
+import javax.swing.event.RowSorterListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 public class SimplePaginatedTable {
 
-    private JFrame frame;
+    public JFrame frame;
     private JTable table;
-    private DefaultTableModel model  = new DefaultTableModel();;
+    private DefaultTableModel model  = new DefaultTableModel(){
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            // 让除了"Age"列之外的所有列都不可编辑
+            return column == 1; // 只有第二列（"Age"）是可编辑的
+        }
+    };
     private PlaceholderTextField searchField;
     private JButton addButton;
 
@@ -29,13 +40,11 @@ public class SimplePaginatedTable {
     private int rowCountPerPage = 10; // Default rows per page
     private Vector<Vector<Object>> originalTableData = new Vector<>();
 
-
-
     private Vector<Vector<Object>> searchTableData = new Vector<>();// Used to store original data
 
     public void init(){
         for (int i = 0; i < 5; i++) { // Create 5 columns for example
-            model.addColumn("Column " + (i + 1));
+            model.addColumn("列 " + (i + 1));
         }
         for (int i = 0; i < 100; i++) {
             Vector<Object> row = new Vector<>();
@@ -46,7 +55,7 @@ public class SimplePaginatedTable {
         }
     }
 
-    public SimplePaginatedTable() {
+    public void init0() {
         init();
 
 
@@ -58,7 +67,29 @@ public class SimplePaginatedTable {
         // Initialize table model and table
 
         table = new JTable(model);
-
+        table.getTableHeader().setReorderingAllowed(false);
+        TableRowSorter<TableModel> sorter = new TableRowSorter<>(table.getModel());
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(1, SortOrder.ASCENDING));  // Age column
+        sorter.setSortKeys(sortKeys);
+        sorter.addRowSorterListener(new RowSorterListener() {
+            @Override
+            public void sorterChanged(RowSorterEvent e) {
+                if (e.getType() == RowSorterEvent.Type.SORT_ORDER_CHANGED) {
+                    // 获取当前的排序键
+                    List<? extends RowSorter.SortKey> keys = sorter.getSortKeys();
+                    if (!keys.isEmpty()) {
+                        // 通常只有一个主键
+                        RowSorter.SortKey key = keys.get(0);
+                        int column = key.getColumn();
+                        SortOrder order = key.getSortOrder();
+                        System.out.println("Sorted column: " + column);
+                        System.out.println("Sort order: " + order);
+                    }
+                }
+            }
+        });
+        table.setRowSorter(sorter);
 
         // Initialize with 100 rows of sample data
         addButton =  new JButton("add");
@@ -123,8 +154,6 @@ public class SimplePaginatedTable {
 
         // Set the size of the frame and make it visible
         frame.setSize(800, 400);
-        frame.setVisible(true);
-
         updateTableData(1);
     }
 
@@ -199,6 +228,8 @@ public class SimplePaginatedTable {
 
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(SimplePaginatedTable::new);
+        SimplePaginatedTable s =new SimplePaginatedTable();
+        s.init0();
+        s.frame.setVisible(true);
     }
 }
