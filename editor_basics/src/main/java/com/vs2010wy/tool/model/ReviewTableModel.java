@@ -1,12 +1,14 @@
 package com.vs2010wy.tool.model;
 
-import com.vs2010wy.tool.constant.TableHeader;
-
 import javax.swing.table.AbstractTableModel;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ReviewTableModel extends AbstractTableModel {
+    public static final String[] TABLE_HEADER = {"Category", "Description","UpdateTime", "Actions"};
+
+    public static final DateTimeFormatter dateTimeFormatter =  DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     private List<Comment> comments = new ArrayList<>();
 
     @Override
@@ -16,7 +18,22 @@ public class ReviewTableModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return TableHeader.TABLE_HEADER.length;
+        return TABLE_HEADER.length;
+    }
+
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        // 第三列是按钮列
+        if (columnIndex == 3) {
+            return Object.class;
+        }
+        return super.getColumnClass(columnIndex);
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int column) {
+        // 只有按钮列可编辑
+        return column == 3;
     }
 
     @Override
@@ -24,23 +41,24 @@ public class ReviewTableModel extends AbstractTableModel {
         Comment comment = comments.get(rowIndex);
         switch (columnIndex) {
             case 0:
-                return comment.getFileName();
+                return comment.getCategory();
             case 1:
                 return comment.getDetail();
             case 2:
-                return comment.getFullPath();
+                return comment.getLocalDateTime().format(dateTimeFormatter);
+            case 3:
+                return "";
         }
 
         return "";
     }
 
     public String getColumnName(int col) {
-        return TableHeader.TABLE_HEADER[col];
+        return TABLE_HEADER[col];
     }
 
     public void addRow(Comment comment) {
         comments.add(0, comment);
-
         fireTableRowsInserted(0, 0);
     }
 
@@ -51,9 +69,10 @@ public class ReviewTableModel extends AbstractTableModel {
 
     public void removeAll() {
         int totalRow = comments.size();
-
         comments.clear();
-        fireTableRowsDeleted(0, totalRow - 1);
+        if(totalRow>0){
+            fireTableRowsDeleted(0, totalRow - 1);
+        }
     }
 
     public Comment getComment(int index) {

@@ -1,15 +1,25 @@
 package com.vs2010wy.tool.test;
 
 
+import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.vs2010wy.tool.model.Comment;
+import com.vs2010wy.tool.model.Position;
+import com.vs2010wy.tool.model.ReviewTableModel;
+
 import javax.swing.*;
 import javax.swing.event.RowSorterEvent;
 import javax.swing.event.RowSorterListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -18,13 +28,7 @@ public class SimplePaginatedTable {
 
     public JFrame frame;
     private JTable table;
-    private DefaultTableModel model  = new DefaultTableModel(){
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            // 让除了"Age"列之外的所有列都不可编辑
-            return column == 1; // 只有第二列（"Age"）是可编辑的
-        }
-    };
+    private ReviewTableModel model  = new ReviewTableModel();
     private PlaceholderTextField searchField;
     private JButton addButton;
 
@@ -38,26 +42,18 @@ public class SimplePaginatedTable {
 
     private int totalCount;
     private int rowCountPerPage = 10; // Default rows per page
-    private Vector<Vector<Object>> originalTableData = new Vector<>();
+    private Vector<Comment> comments = new Vector<>();
 
-    private Vector<Vector<Object>> searchTableData = new Vector<>();// Used to store original data
+    private Project project;
+    private Vector<Comment> searchTableData = new Vector<>();// Used to store original data
 
-    public void init(){
-        for (int i = 0; i < 5; i++) { // Create 5 columns for example
-            model.addColumn("列 " + (i + 1));
-        }
-        for (int i = 0; i < 100; i++) {
-            Vector<Object> row = new Vector<>();
-            for (int j = 0; j < 5; j++) {
-                row.add("Data " + i + "," + j);
-            }
-            originalTableData.add(row);
-        }
+    public void addComment(Comment comment){
+        comments.insertElementAt(comment,0);
+        updateTableData(currentPage);
     }
 
-    public void init0() {
-        init();
 
+    public void init0() {
 
         // Initialize the frame
         frame = new JFrame("Paginated JTable Example");
@@ -68,6 +64,50 @@ public class SimplePaginatedTable {
 
         table = new JTable(model);
         table.getTableHeader().setReorderingAllowed(false);
+
+        ListSelectionModel selectionModel = table.getSelectionModel();
+        selectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int rowIndex = table.rowAtPoint(e.getPoint());
+                    if (rowIndex == -1) {
+                        selectionModel.clearSelection();
+                        return;
+                    }
+
+                    Comment comment = model.getComment(rowIndex);
+                    VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(new File(comment.getFullPath()));
+
+                    Position position = comment.getLocation().getStart();
+                    OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, virtualFile,
+                            position.getRow(), position.getColumn());
+                    openFileDescriptor.navigate(true);
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
         TableRowSorter<TableModel> sorter = new TableRowSorter<>(table.getModel());
         List<RowSorter.SortKey> sortKeys = new ArrayList<>();
         sortKeys.add(new RowSorter.SortKey(1, SortOrder.ASCENDING));  // Age column
@@ -91,6 +131,9 @@ public class SimplePaginatedTable {
         });
         table.setRowSorter(sorter);
 
+        ButtonRendererEditor buttonRendererEditor = new ButtonRendererEditor();
+        table.getColumn("Actions").setCellRenderer(buttonRendererEditor);
+        table.getColumn("Actions").setCellEditor(buttonRendererEditor);
         // Initialize with 100 rows of sample data
         addButton =  new JButton("add");
         nextButton = new JButton("next");
@@ -101,26 +144,10 @@ public class SimplePaginatedTable {
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Vector<Object> row = new Vector<>();
-                for (int j = 0; j < 5; j++) {
-                    row.add("Data"+j);
-                }
-                int selected = table.getSelectedRow();
                 updateTableData(Math.max(currentPage,totalPage));
             }
         });
-        addButton.addActionListener(new ActionListener() {
-            //新增或者update
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Vector<Object> row = new Vector<>();
-                for (int j = 0; j < 5; j++) {
-                    row.add("Data"+j);
-                }
-                originalTableData.insertElementAt(row,0);
-                updateTableData(currentPage);
-            }
-        });
+
 
         searchField.setPreferredSize(new Dimension(200 ,nextButton.getPreferredSize().height));
         // Initialize pagination buttons, label, and page size combo box
@@ -128,7 +155,7 @@ public class SimplePaginatedTable {
         pageSizeComboBox.setSelectedItem(rowCountPerPage);
         pageSizeComboBox.addActionListener(this::pageSizeChanged);
 
-        totalPage = (int) Math.ceil(originalTableData.size() / (double) rowCountPerPage);
+        totalPage = (int) Math.ceil(comments.size() / (double) rowCountPerPage);
         pageLabel = new JLabel();
         updatePageLabel();
         previousButton = new JButton("pre");
@@ -151,9 +178,9 @@ public class SimplePaginatedTable {
         bottomPanel.add(searchField);
 
         frame.add(bottomPanel, BorderLayout.NORTH);
-        JLabel statusBar  =  new JLabel("xxxx");
-        statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
-        frame.add(statusBar,BorderLayout.SOUTH);
+//        JLabel statusBar  =  new JLabel("xxxx");
+//        statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
+//        frame.add(statusBar,BorderLayout.SOUTH);
         // Set the size of the frame and make it visible
         frame.setSize(800, 400);
         updateTableData(1);
@@ -174,20 +201,17 @@ public class SimplePaginatedTable {
     private void updateTableData(int page) {
         rowCountPerPage = (int) pageSizeComboBox.getSelectedItem();
         int start = (page - 1) * rowCountPerPage;
-        int end = Math.min(page * rowCountPerPage, originalTableData.size());
+        int end = Math.min(page * rowCountPerPage, comments.size());
 
-        Vector<Vector<Object>> pageData;
+        Vector<Comment> pageData;
         String searchText = searchField.getText();
 
         if (!searchText.isEmpty()) {
             // Filter original data for search query
-            Vector<Vector<Object>> filteredData = new Vector<>();
-            for (Vector<Object> row : originalTableData) {
-                for (Object cell : row) {
-                    if (cell.toString().contains(searchText)) {
-                        filteredData.add(row);
-                        break;
-                    }
+            Vector<Comment> filteredData = new Vector<>();
+            for (Comment comment : comments) {
+                if(comment.getCategory().contains(searchText)||comment.getDetail().contains(searchText)){
+                    filteredData.add(comment);
                 }
             }
             totalPage = (int) Math.ceil((double) filteredData.size() / rowCountPerPage);
@@ -198,13 +222,14 @@ public class SimplePaginatedTable {
             searchTableData = filteredData;
         } else {
             // No search text, use original data
-            pageData = new Vector<>(originalTableData.subList(start, end));
-            totalPage = (int) Math.ceil((double) originalTableData.size() / rowCountPerPage);
-            totalCount = originalTableData.size();
+            pageData = new Vector<>(comments.subList(start, end));
+            totalPage = (int) Math.ceil((double) comments.size() / rowCountPerPage);
+            totalCount = comments.size();
         }
-
-        model.setRowCount(0); // Clear the table
-        pageData.forEach(model::addRow); // Add rows to the table
+        model.removeAll(); // Clear the table
+        for(Comment comment: pageData){
+            model.addRow(comment);
+        }
         updatePageLabel();
     }
 
@@ -233,5 +258,9 @@ public class SimplePaginatedTable {
         SimplePaginatedTable s =new SimplePaginatedTable();
         s.init0();
         s.frame.setVisible(true);
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
     }
 }

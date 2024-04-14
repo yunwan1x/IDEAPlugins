@@ -43,8 +43,9 @@
   <extensions defaultExtensionNs="com.intellij">
     <toolWindow id="CodeReview" icon="SdkIcons.Sdk_default_icon" factoryClass="com.vs2010wy.tool.test.CodeReivewWindow"   anchor="bottom"/>
     <notificationGroup id="comment" displayType="BALLOON"/>
-    <editor.linePainter implementation="com.vs2010wy.tool.ui.CommentPainter"/>
-
+<!--    <editor.linePainter implementation="com.vs2010wy.tool.ui.CommentPainter"/>-->
+    <projectService serviceInterface="com.vs2010wy.tool.service.ReviewWindowService"
+                    serviceImplementation="com.vs2010wy.tool.service.ReviewWindowService"/>
   </extensions>
 
 </idea-plugin>

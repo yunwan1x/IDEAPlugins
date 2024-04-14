@@ -12,8 +12,8 @@ public class CommentPanel {
     private JPanel commitPanel;
 
     private JLabel categoriesLabel;
-    private JTextField categoriesField;
-    private JTextArea detailArea;
+    public JTextField categoriesField;
+    public JTextArea detailArea;
 
     private JLabel descriptionLabel;
     private JScrollPane descriptionScrollPanl;

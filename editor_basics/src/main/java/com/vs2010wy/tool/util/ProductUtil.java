@@ -3,6 +3,7 @@ package com.vs2010wy.tool.util;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
+import icons.SdkIcons;
 
 import java.util.ResourceBundle;
 

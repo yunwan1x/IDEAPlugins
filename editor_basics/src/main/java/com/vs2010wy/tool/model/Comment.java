@@ -1,11 +1,24 @@
 package com.vs2010wy.tool.model;
 
+
+import java.time.LocalDateTime;
+
 public class Comment {
     private String fullPath;
     private String fileName;
     private Location location;
     private String category;
     private String detail;
+
+    public LocalDateTime getLocalDateTime() {
+        return localDateTime;
+    }
+
+    public void setLocalDateTime(LocalDateTime localDateTime) {
+        this.localDateTime = localDateTime;
+    }
+
+    private LocalDateTime localDateTime;
 
     public Comment() {
     }
@@ -15,6 +28,7 @@ public class Comment {
         this.fileName = fileName;
         this.location = location;
         this.detail = detail;
+        this.localDateTime = LocalDateTime.now();
     }
 
     public String getFullPath() {
