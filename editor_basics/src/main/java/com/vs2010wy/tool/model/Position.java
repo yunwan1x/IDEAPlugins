@@ -1,5 +1,7 @@
 package com.vs2010wy.tool.model;
 
+import java.util.Objects;
+
 public class Position {
     private int row;
     private int column;
@@ -31,5 +33,17 @@ public class Position {
                 "row=" + row +
                 ", column=" + column +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Position position)) return false;
+        return row == position.row && column == position.column;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(row, column);
     }
 }

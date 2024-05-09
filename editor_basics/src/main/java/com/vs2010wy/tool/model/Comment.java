@@ -2,6 +2,7 @@ package com.vs2010wy.tool.model;
 
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class Comment {
     private String fullPath;
@@ -79,5 +80,17 @@ public class Comment {
                 ", location=" + location +
                 ", detail='" + detail + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Comment comment)) return false;
+        return Objects.equals(fullPath, comment.fullPath) && Objects.equals(location, comment.location);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fullPath, location);
     }
 }

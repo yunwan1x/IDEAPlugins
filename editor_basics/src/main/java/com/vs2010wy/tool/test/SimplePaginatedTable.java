@@ -1,6 +1,10 @@
 package com.vs2010wy.tool.test;
 
 
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -12,6 +16,7 @@ import com.vs2010wy.tool.model.ReviewTableModel;
 import javax.swing.*;
 import javax.swing.event.RowSorterEvent;
 import javax.swing.event.RowSorterListener;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -48,7 +53,15 @@ public class SimplePaginatedTable {
     private Vector<Comment> searchTableData = new Vector<>();// Used to store original data
 
     public void addComment(Comment comment){
-        comments.insertElementAt(comment,0);
+        int index = comments.indexOf(comment);
+        if(index>-1){
+            Comment old = comments.get(index);
+            old.setCategory(comment.getCategory());
+            old.setDetail(comment.getDetail());
+            old.setLocalDateTime(comment.getLocalDateTime());
+        }else {
+            comments.insertElementAt(comment,0);
+        }
         updateTableData(currentPage);
     }
 
@@ -76,14 +89,28 @@ public class SimplePaginatedTable {
                         selectionModel.clearSelection();
                         return;
                     }
+                    try{
+                        Comment comment = model.getComment(rowIndex);
+                        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(new File(comment.getFullPath()));
+                        Position startPosition = comment.getLocation().getStart();
+                        Position endPosition = comment.getLocation().getEnd();
+                        OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, virtualFile,
+                                startPosition.getRow(), startPosition.getColumn());
+                        openFileDescriptor.navigate(true);
+                        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                        if (editor == null) return;
 
-                    Comment comment = model.getComment(rowIndex);
-                    VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(new File(comment.getFullPath()));
+                        // 获取选择模型
+                        SelectionModel selectionModel = editor.getSelectionModel();
+                        Document document = editor.getDocument();
+                        int startOffset = document.getLineStartOffset(startPosition.getRow()) + startPosition.getColumn();
+                        int endOffset = document.getLineStartOffset(endPosition.getRow()) + endPosition.getColumn();
+                        // 设置选择区域，这里以选择文档的前10个字符为例
+                        selectionModel.setSelection(startOffset, endOffset);
+                    }catch (Exception v){
 
-                    Position position = comment.getLocation().getStart();
-                    OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, virtualFile,
-                            position.getRow(), position.getColumn());
-                    openFileDescriptor.navigate(true);
+                    }
+
                 }
             }
 
@@ -107,7 +134,10 @@ public class SimplePaginatedTable {
 
             }
         });
-
+        TableColumn firstColumn = table.getColumnModel().getColumn(2);
+        firstColumn.setPreferredWidth(200);
+        firstColumn.setMaxWidth(200);
+        firstColumn.setMinWidth(200);
         TableRowSorter<TableModel> sorter = new TableRowSorter<>(table.getModel());
         List<RowSorter.SortKey> sortKeys = new ArrayList<>();
         sortKeys.add(new RowSorter.SortKey(1, SortOrder.ASCENDING));  // Age column
@@ -130,10 +160,6 @@ public class SimplePaginatedTable {
             }
         });
         table.setRowSorter(sorter);
-
-        ButtonRendererEditor buttonRendererEditor = new ButtonRendererEditor();
-        table.getColumn("Actions").setCellRenderer(buttonRendererEditor);
-        table.getColumn("Actions").setCellEditor(buttonRendererEditor);
         // Initialize with 100 rows of sample data
         addButton =  new JButton("add");
         nextButton = new JButton("next");
@@ -171,6 +197,9 @@ public class SimplePaginatedTable {
         bottomPanel.setLayout(new FlowLayout());
         bottomPanel.add(addButton);
         bottomPanel.add(deleteButton);
+
+
+        bottomPanel.add(new JSeparator(SwingConstants.VERTICAL));
         bottomPanel.add(previousButton);
         bottomPanel.add(nextButton);
         bottomPanel.add(pageLabel);

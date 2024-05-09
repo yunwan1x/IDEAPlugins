@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReviewTableModel extends AbstractTableModel {
-    public static final String[] TABLE_HEADER = {"Category", "Description","UpdateTime", "Actions"};
+    public static final String[] TABLE_HEADER = {"Category", "Description","UpdateTime"};
 
     public static final DateTimeFormatter dateTimeFormatter =  DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     private List<Comment> comments = new ArrayList<>();
@@ -21,19 +21,12 @@ public class ReviewTableModel extends AbstractTableModel {
         return TABLE_HEADER.length;
     }
 
-    @Override
-    public Class<?> getColumnClass(int columnIndex) {
-        // 第三列是按钮列
-        if (columnIndex == 3) {
-            return Object.class;
-        }
-        return super.getColumnClass(columnIndex);
-    }
+
 
     @Override
     public boolean isCellEditable(int row, int column) {
         // 只有按钮列可编辑
-        return column == 3;
+        return column == 0||column == 1;
     }
 
     @Override
@@ -46,8 +39,6 @@ public class ReviewTableModel extends AbstractTableModel {
                 return comment.getDetail();
             case 2:
                 return comment.getLocalDateTime().format(dateTimeFormatter);
-            case 3:
-                return "";
         }
 
         return "";
@@ -58,8 +49,10 @@ public class ReviewTableModel extends AbstractTableModel {
     }
 
     public void addRow(Comment comment) {
+
         comments.add(0, comment);
         fireTableRowsInserted(0, 0);
+
     }
 
     public void removeRow(int rowIndex) {

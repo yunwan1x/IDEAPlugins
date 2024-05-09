@@ -1,5 +1,7 @@
 package com.vs2010wy.tool.model;
 
+import java.util.Objects;
+
 public class Location {
     private Position start;
     private Position end;
@@ -32,4 +34,13 @@ public class Location {
                 ", end=" + end +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Location location)) return false;
+        return Objects.equals(start, location.start) && Objects.equals(end, location.end);
+    }
+
+
 }
