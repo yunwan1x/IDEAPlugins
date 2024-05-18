@@ -11,6 +11,16 @@ public class Comment {
     private String category;
     private String detail;
 
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    private int index;
+
     public LocalDateTime getLocalDateTime() {
         return localDateTime;
     }
@@ -24,11 +34,13 @@ public class Comment {
     public Comment() {
     }
 
-    public Comment(String fullPath, String fileName, Location location, String detail) {
+    public Comment(int index,String fullPath, String fileName, Location location, String category,String detail) {
         this.fullPath = fullPath;
         this.fileName = fileName;
         this.location = location;
+        this.index = index;
         this.detail = detail;
+        this.setCategory(category);
         this.localDateTime = LocalDateTime.now();
     }
 

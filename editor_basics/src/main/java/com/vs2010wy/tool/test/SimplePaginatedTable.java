@@ -10,20 +10,19 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.vs2010wy.tool.model.Comment;
+import com.vs2010wy.tool.model.Location;
 import com.vs2010wy.tool.model.Position;
 import com.vs2010wy.tool.model.ReviewTableModel;
 
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.RowSorterEvent;
 import javax.swing.event.RowSorterListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +67,12 @@ public class SimplePaginatedTable {
 
     public void init0() {
 
+        for(int i=0;i<100;i++){
+            Position start = new Position(i,i);
+            Location location =  new Location(start,start);
+            Comment comment =new Comment(i+1,"",i+"",location,i+"",i+"");
+            comments.add(comment);
+        }
         // Initialize the frame
         frame = new JFrame("Paginated JTable Example");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -134,36 +139,11 @@ public class SimplePaginatedTable {
 
             }
         });
-        TableColumn firstColumn = table.getColumnModel().getColumn(2);
+        TableColumn firstColumn = table.getColumn("UpdateTime");
         firstColumn.setPreferredWidth(200);
         firstColumn.setMaxWidth(200);
         firstColumn.setMinWidth(200);
-        TableRowSorter<TableModel> sorter = new TableRowSorter<>(table.getModel());
-        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-        sortKeys.add(new RowSorter.SortKey(1, SortOrder.ASCENDING));  // Age column
-        sorter.setSortKeys(sortKeys);
-        sorter.addRowSorterListener(new RowSorterListener() {
-            @Override
-            public void sorterChanged(RowSorterEvent e) {
-                if (e.getType() == RowSorterEvent.Type.SORT_ORDER_CHANGED) {
-                    // 获取当前的排序键
-                    List<? extends RowSorter.SortKey> keys = sorter.getSortKeys();
-                    if (!keys.isEmpty()) {
-                        // 通常只有一个主键
-                        RowSorter.SortKey key = keys.get(0);
-                        int column = key.getColumn();
-                        SortOrder order = key.getSortOrder();
-                        System.out.println("Sorted column: " + column);
-                        System.out.println("Sort order: " + order);
-                    }
-                }
-            }
-        });
-        table.setRowSorter(sorter);
-        // Initialize with 100 rows of sample data
-        addButton =  new JButton("add");
         nextButton = new JButton("next");
-        // Initialize search field
         searchField  = new PlaceholderTextField("");
         searchField.setPlaceholder("serch every column");
         searchField.addActionListener(this::searchAction);
@@ -195,17 +175,14 @@ public class SimplePaginatedTable {
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new FlowLayout());
-        bottomPanel.add(addButton);
         bottomPanel.add(deleteButton);
-
-
         bottomPanel.add(new JSeparator(SwingConstants.VERTICAL));
         bottomPanel.add(previousButton);
         bottomPanel.add(nextButton);
         bottomPanel.add(pageLabel);
         bottomPanel.add(pageSizeComboBox);
         bottomPanel.add(searchField);
-
+        deleteButton.addActionListener(this::deleteAction);
         frame.add(bottomPanel, BorderLayout.NORTH);
 //        JLabel statusBar  =  new JLabel("xxxx");
 //        statusBar.setBorder(BorderFactory.createLoweredBevelBorder());
@@ -223,6 +200,22 @@ public class SimplePaginatedTable {
 
     private void searchAction(ActionEvent e) {
         updateTableData(1);
+    }
+
+    private void deleteAction(ActionEvent e) {
+        int rowIndex = table.getSelectedRow();
+        if (rowIndex == -1) {
+            return;
+        }
+        try{
+            rowIndex = table.getSelectedRow();
+            ReviewTableModel reviewTableModel = (ReviewTableModel)table.getModel();
+            Comment comment = reviewTableModel.getComment(rowIndex);
+            comments.remove(comment);
+        }catch (Exception v){
+
+        }
+        updateTableData(currentPage);
     }
 
 
@@ -263,7 +256,7 @@ public class SimplePaginatedTable {
     }
 
     private void updatePageLabel() {
-        pageLabel.setText( String.format("共 %d 页,第 %d 页,共 %d 条",totalPage,currentPage,totalCount) );
+        pageLabel.setText( String.format("%d pages, page %d , %d items",totalPage,currentPage,totalCount) );
 
     }
 

@@ -8,6 +8,7 @@ import java.util.List;
 public class ReviewTableModel extends AbstractTableModel {
     public static final String[] TABLE_HEADER = {"Category", "Description","UpdateTime"};
 
+
     public static final DateTimeFormatter dateTimeFormatter =  DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     private List<Comment> comments = new ArrayList<>();
 
